@@ -17,6 +17,15 @@ This Python script is a comprehensive solution for managing user authentication,
 - `time`: Specifically, `sleep` for simulating processing time.
 - `rich.console`: To enhance the terminal output with rich text and formatting.
 
+## Requirements
+
+- Python 3.x
+- `re` module for regular expressions
+- `questionary` module for interactive user prompts
+- `json` module for handling JSON operations
+- `rich` module for rich text and formatted console output
+- `time` module for sleep function
+
 ## How It Works
 
 ### Validate Class
