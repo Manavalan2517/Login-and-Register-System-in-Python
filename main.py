@@ -38,7 +38,10 @@ class Validate:
         else:
             with open("data.json", "r") as f:
                 fdata = json.load(f)
-                return username not in fdata["gamedata"]
+                if username in fdata["gamedata"]:
+                    return "User already exists"
+                else:
+                    return True
 
     def validate_password(self, password):
         if len(password) < 7:
@@ -79,7 +82,6 @@ class Validate:
             else:
                 console.print(f"[bold red]Username '{username}' not found.")
         return False
-
 
 # Object
 validateObj = Validate()
