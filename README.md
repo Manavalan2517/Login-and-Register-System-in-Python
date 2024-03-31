@@ -1,6 +1,6 @@
 # Real-Time Authentication System in Python
 
-![Thumbnail]()
+![GIF](https://github.com/Manavalan2517/Real-Time-Authentication-System-in-Python/blob/main/Samples/Real%20Time%20Authentication%20System%20in%20Python.gif)
 
 This Python script is a comprehensive solution for managing user authentication, which includes both registration and login functionalities. It utilizes a local JSON file to store user credentials securely.
 
