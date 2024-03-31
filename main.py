@@ -3,6 +3,7 @@ import questionary
 import json
 from time import sleep
 from rich.console import Console
+import bcrypt
 
 console = Console()
 
@@ -17,12 +18,18 @@ class Validate:
       data = {"gamedata" : {}}
       json.dump(data, f2, indent=3)
       f2.close()
+  
+  # Hash a password
+  def hash_password(self, password):
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt)
 
   # Updating Json file
   def update_json(self, username, password):
     f1 = open("data.json", "r+")
     fdata = json.load(f1)
-    data = {username:{"password":password}}
+    password = str(password)
+    data = {username:{"password":password[2:-1]}}
     fdata["gamedata"].update(data)
     f2 = open("data.json", "w")
     json.dump(fdata, f2, indent=3)
@@ -41,7 +48,6 @@ class Validate:
       elif re.search("[a-z]", username[0]) is None:
         return "Username must contain only lower-case letters"
       else:
-        f1.close()
         return True
       
   # Username Login
@@ -79,11 +85,13 @@ class Validate:
     f1 = open("data.json", "r+")
     fdata = json.load(f1)
     for i,k in fdata["gamedata"].items():
-        if k["password"] != password:
-          return "The password you entered does not match your registered password."
+        bytepass = bytes(k["password"], 'utf-8')
+        val = bcrypt.checkpw(password.encode('utf-8'), bytepass)
+        if val:
+          return True
     else:
-      f1.close()
-      return True
+      return "The password you entered does not match your registered password."
+      
 
 # Object
 validateObj = Validate()
@@ -94,8 +102,12 @@ def register():
     username = questionary.text("Enter your Username", validate = validateObj.username_register).ask() 
     # Password
     password = questionary.password("Enter your password", validate = validateObj.password_register).ask()
+    # Hash a password
+    hashed_password = validateObj.hash_password(password)
+    print(hashed_password, type(hashed_password))
+    # Updating JSON
+    validateObj.update_json(username, hashed_password)
     # Loading
-    validateObj.update_json(username, password)
     with console.status("[bold green]Loading...") as status:
       sleep(1)
       console.log("Register Successful")
