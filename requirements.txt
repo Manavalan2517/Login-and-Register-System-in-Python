@@ -1,6 +1,3 @@
-re
 questionary==1.10.0
-json
-time
 rich==10.7.0
 bycrypt

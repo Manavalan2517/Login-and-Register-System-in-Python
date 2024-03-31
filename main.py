@@ -1,97 +1,85 @@
-import re
 import questionary
 import json
 from time import sleep
+import bcrypt  # Or Argon2 for stronger hashing
 from rich.console import Console
-import bcrypt
 
 console = Console()
 
 class Validate:
-  def __init__(self) -> None:
-    try: # Check JSON File Exist or not
-      f1 = open("data.json", "r+")
-    except: # If not exist Create a new one
-      f1 = open("data.json", "x")
-      f1.close()
-      f2 = open("data.json", "w")
-      data = {"gamedata" : {}}
-      json.dump(data, f2, indent=3)
-      f2.close()
-  
-  # Hash a password
-  def hash_password(self, password):
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode('utf-8'), salt)
+    def __init__(self) -> None:
+        try:
+            # Check JSON File Exist or not
+            with open("data.json", "r+") as f1:
+                pass
+        except FileNotFoundError:
+            # If not exist create a new one
+            with open("data.json", "w") as f1:
+                data = {"gamedata": {}}
+                json.dump(data, f1, indent=3)
 
-  # Updating Json file
-  def update_json(self, username, password):
-    f1 = open("data.json", "r+")
-    fdata = json.load(f1)
-    password = str(password)
-    data = {username:{"password":password[2:-1]}}
-    fdata["gamedata"].update(data)
-    f2 = open("data.json", "w")
-    json.dump(fdata, f2, indent=3)
-    f2.close()
-    f1.close()
+    def hash_password(self, password):
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode('utf-8'), salt)
 
-  # Username Register
-  def username_register(self, username):
-      f1 = open("data.json", "r+")
-      fdata = json.load(f1)
-      for i,k in fdata["gamedata"].items():
-        if i == username:
-          return "User Already Exists --->> Try Sign In (or) Try another Username"
-      if len(username) == 0:
-        return "Please enter a value"
-      elif re.search("[a-z]", username[0]) is None:
-        return "Username must contain only lower-case letters"
-      else:
-        return True
-      
-  # Username Login
-  def username_login(self, username):
-      usernamelist = []
-      f1 = open("data.json", "r+")
-      fdata = json.load(f1)
-      for i,k in fdata["gamedata"].items():
-         usernamelist.append(i)
-      if username not in usernamelist:
-         return "The Username you entered does not match your registered Username."
-      if len(username) == 0:
-        return "Please enter a value"
-      elif re.search("[a-z]", username[0]) is None:
-        return "Username must contain only lower-case letters"
-      else:
-        f1.close()
-        return True
-      
-  # Password Register
-  def password_register(self, password):
-    if len(password) < 7:
-      return "Password must be at least 7 characters"
-    elif re.search("[0-9]", password) is None:
-      return "Password must contain a number"
-    elif re.search("[a-z]", password) is None:
-      return "Password must contain an lower-case letter"
-    elif re.search("[A-Z]", password) is None:
-      return "Password must contain an upper-case letter"
-    else:
-      return True
+    def update_json(self, username, hashed_password):
+        with open("data.json", "r+") as f:
+            fdata = json.load(f)
+            data = {username: {"password": hashed_password.decode()}}
+            fdata["gamedata"].update(data)
+            f.seek(0)  # Move to the beginning of the file
+            json.dump(fdata, f, indent=3)
 
-  # Password Login
-  def password_login(self, password):
-    f1 = open("data.json", "r+")
-    fdata = json.load(f1)
-    for i,k in fdata["gamedata"].items():
-        bytepass = bytes(k["password"], 'utf-8')
-        val = bcrypt.checkpw(password.encode('utf-8'), bytepass)
-        if val:
-          return True
-    else:
-      return "The password you entered does not match your registered password."
-      
+    def validate_username(self, username):
+        if len(username) == 0:
+            return "Please enter a username."
+        elif not username.islower():
+            return "Username must contain only lowercase letters."
+        else:
+            with open("data.json", "r") as f:
+                fdata = json.load(f)
+                return username not in fdata["gamedata"]
+
+    def validate_password(self, password):
+        if len(password) < 7:
+            return "Password must be at least 7 characters."
+        elif not any(char.isdigit() for char in password):
+            return "Password must contain a number."
+        elif not any(char.islower() for char in password):
+            return "Password must contain a lowercase letter."
+        elif not any(char.isupper() for char in password):
+            return "Password must contain an uppercase letter."
+        else:
+            return True
+
+    def register_user(self, username, password):
+        if self.validate_username(username) and self.validate_password(password):
+            hashed_password = self.hash_password(password)
+            self.update_json(username, hashed_password)
+            console.log("[bold green]Registration successful!")
+            return True
+        else:
+            if not self.validate_username(username):
+                console.print(f"[bold red]Username error: {self.validate_username(username)}")
+            if not self.validate_password(password):
+                console.print(f"[bold red]Password error: {self.validate_password(password)}")
+            return False
+
+    def login_user(self, username, password):
+        username = username.lower()  # Allow case-insensitive login
+        with open("data.json", "r") as f:
+            fdata = json.load(f)
+            if username in fdata["gamedata"]:
+                hashed_password = fdata["gamedata"][username]["password"].encode()
+                if bcrypt.checkpw(password.encode('utf-8'), hashed_password):
+                    console.log("[bold green]Login successful!")
+                    return True
+                else:
+                    console.print("[bold red]Incorrect password.")
+            else:
+                console.print(f"[bold red]Username '{username}' not found.")
+        return False
+
 
 # Object
 validateObj = Validate()
@@ -99,31 +87,26 @@ validateObj = Validate()
 # Login or Register
 def register():
     # Username
-    username = questionary.text("Enter your Username", validate = validateObj.username_register).ask() 
+    username = questionary.text("Enter your Username", validate=validateObj.validate_username).ask()
     # Password
-    password = questionary.password("Enter your password", validate = validateObj.password_register).ask()
-    # Hash a password
-    hashed_password = validateObj.hash_password(password)
-    print(hashed_password, type(hashed_password))
-    # Updating JSON
-    validateObj.update_json(username, hashed_password)
-    # Loading
-    with console.status("[bold green]Loading...") as status:
-      sleep(1)
-      console.log("Register Successful")
-      sleep(1)
-    console.log("Now login to your account")
-    login()
+    password = questionary.password("Enter your password", validate=validateObj.validate_password).ask()
+
+    # Registration logic
+    if validateObj.register_user(username, password):
+        sleep(1)
+        login()
 
 def login():
     # Username
-    username = questionary.text("Enter your Username", validate = validateObj.username_login).ask()
+    username = questionary.text("Enter your Username").ask()
     # Password
-    password = questionary.password("Enter your password", validate = validateObj.password_login).ask()
-    # Loading
-    with console.status("[bold green]Loading...") as status:
-      sleep(1)
-      console.log("Login Successful")
+    password = questionary.password("Enter your password").ask()
+
+    # Login logic
+    if validateObj.login_user(username, password):
+        sleep(1)
+        console.log("[bold green]Welcome back!")
+        # Implement actions after successful login (e.g., game menu)
 
 # Choice to select login or register
 choice = questionary.select(
