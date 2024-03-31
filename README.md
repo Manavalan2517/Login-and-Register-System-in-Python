@@ -1,5 +1,7 @@
 # Real-Time Authentication System in Python
 
+![Thumbnail]()
+
 This Python script is a comprehensive solution for managing user authentication, which includes both registration and login functionalities. It utilizes a local JSON file to store user credentials securely.
 
 ## Features
