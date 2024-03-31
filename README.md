@@ -18,6 +18,7 @@ This Python script is a comprehensive solution for managing user authentication,
 - `json`: For handling JSON file operations.
 - `time`: Specifically, `sleep` for simulating processing time.
 - `rich.console`: To enhance the terminal output with rich text and formatting.
+- `bycrypt` The bcrypt module in Python is used for password hashing.
 
 ## Requirements
 
@@ -27,6 +28,7 @@ This Python script is a comprehensive solution for managing user authentication,
 - `json` module for handling JSON operations
 - `rich` module for rich text and formatted console output
 - `time` module for sleep function
+- `bycrypt` The bcrypt module in Python is used for password hashing
 
 ## How It Works
 
@@ -40,6 +42,7 @@ The `Validate` class is the core of the input validation and JSON file managemen
 - `username_login`: Validates usernames during login.
 - `password_register`: Validates new passwords during registration.
 - `password_login`: Validates passwords during login.
+- `hash_password`:  Password will be hashed for extra security
 
 An instance of this class, `validateObj`, is used throughout the script to perform validations.
 
