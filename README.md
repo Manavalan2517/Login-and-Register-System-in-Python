@@ -2,65 +2,46 @@
 
 ![GIF](https://github.com/Manavalan2517/Real-Time-Authentication-System-in-Python/blob/main/Samples/Real%20Time%20Authentication%20System%20in%20Python.gif)
 
-This Python script is a comprehensive solution for managing user authentication, which includes both registration and login functionalities. It utilizes a local JSON file to store user credentials securely.
+This project provides a comprehensive user authentication and management system, consisting of three main Python files: `main.py`, `server.py`, and `client.py`. The system supports user registration, login, and account deletion, while ensuring secure password storage using bcrypt hashing. Additionally, the project includes a JSON file (`data.json`) to store user data.
+
+## File Descriptions
+
+1. `main.py`: A command-line interface (CLI) application that allows users to register, log in, and delete their accounts. The application uses the `questionary` library to create interactive prompts and the `bcrypt` library to securely hash and verify passwords.
+2. `server.py`: A FastAPI-based server that exposes RESTful endpoints for user registration, login, and account deletion. The server also utilizes `bcrypt` for password hashing and verification, and stores user data in a JSON file.
+3. `client.py`: A client application that interacts with the FastAPI server using the `requests` library. The client demonstrates how to register, log in, and delete user accounts by sending HTTP requests to the server's endpoints.
 
 ## Features
 
-- **User Registration**: Securely register with a username and password.
-- **User Login**: Log in with existing credentials.
-- **Data Storage**: User data is stored in a JSON file, ensuring persistence across sessions.
-- **Input Validation**: Robust validation for both usernames and passwords during registration and login.
-
-## Modules Used
-
-- `re`: For regular expressions, ensuring input validation.
-- `questionary`: To prompt users for input in an interactive manner.
-- `json`: For handling JSON file operations.
-- `time`: Specifically, `sleep` for simulating processing time.
-- `rich.console`: To enhance the terminal output with rich text and formatting.
-- `bycrypt` The bcrypt module in Python is used for password hashing.
+- User registration with password validation (minimum length, uppercase, lowercase, and numeric character requirements) and email validation.
+- Secure password storage using bcrypt hashing.
+- User login with case-insensitive username support.
+- Account deletion for registered users.
+- JSON-based data storage for user information.
 
 ## Requirements
 
-- Python 3.x
-- `re` module for regular expressions
-- `questionary` module for interactive user prompts
-- `json` module for handling JSON operations
-- `rich` module for rich text and formatted console output
-- `time` module for sleep function
-- `bycrypt` The bcrypt module in Python is used for password hashing
-
-## How It Works
-
-### Validate Class
-
-The `Validate` class is the core of the input validation and JSON file management:
-
-- `__init__`: Checks for the existence of `data.json` and creates it if necessary, initializing with a `gamedata` object.
-- `update_json`: Updates the JSON file with new user credentials.
-- `username_register`: Validates new usernames during registration.
-- `username_login`: Validates usernames during login.
-- `password_register`: Validates new passwords during registration.
-- `password_login`: Validates passwords during login.
-- `hash_password`:  Password will be hashed for extra security
-
-An instance of this class, `validateObj`, is used throughout the script to perform validations.
-
-### Registration and Login Functions
-
-- `register()`: Manages the registration process, including user prompts and JSON file updating.
-- `login()`: Manages the login process with user prompts and validation checks.
-
-### User Interaction
-
-Users are prompted to choose between 'LOGIN' and 'REGISTER'. The script then proceeds with the corresponding function based on the user's choice.
+- Python 3.6 or newer
+- `uvicorn` (for running the FastAPI server)
+- `fastapi`
+- `bcrypt`
+- `questionary` (for the CLI application)
+- `requests` (for the client application)
 
 ## Getting Started
 
-To use this script:
+1. Install the required packages:
+```bash
+pip install uvicorn fastapi bcrypt questionary requests
+```
+2. Run the FastAPI server:
+```bash
+python server.py
+```
+The server will start listening on `http://localhost:8000`.
 
-1. Clone the repository.
-2. Run the script in a terminal.
-3. Choose 'REGISTER' to create a new account or 'LOGIN' to access an existing one.
+3. Use the CLI application (`main.py`) to use auth locally and the client (`client.py`) to interact with the server.
 
-Enjoy a seamless and secure authentication experience!
+## Notes
+
+- The CLI application (`main.py`) can be run independently of the server and uses its own instance of the JSON data file.
+- The client application (`client.py`) communicates with the server (`server.py`) and shares the same JSON data file as the server.
