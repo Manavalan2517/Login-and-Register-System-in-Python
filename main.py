@@ -1,10 +1,12 @@
 import questionary
 import json
 from time import sleep
-import bcrypt  # Or Argon2 for stronger hashing
+import bcrypt
+import re
 from rich.console import Console
 
 console = Console()
+
 
 class Validate:
     def __init__(self) -> None:
@@ -22,10 +24,10 @@ class Validate:
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode('utf-8'), salt)
 
-    def update_json(self, username, hashed_password):
+    def update_json(self, username, hashed_password, email):
         with open("data.json", "r+") as f:
             fdata = json.load(f)
-            data = {username: {"password": hashed_password.decode()}}
+            data = {username: {"password": hashed_password.decode(), "email": email}}
             fdata["gamedata"].update(data)
             f.seek(0)  # Move to the beginning of the file
             json.dump(fdata, f, indent=3)
@@ -38,7 +40,10 @@ class Validate:
         else:
             with open("data.json", "r") as f:
                 fdata = json.load(f)
-                return username not in fdata["gamedata"]
+                if username in fdata["gamedata"]:
+                    return "User already exists"
+                else:
+                    return True
 
     def validate_password(self, password):
         if len(password) < 7:
@@ -52,10 +57,17 @@ class Validate:
         else:
             return True
 
-    def register_user(self, username, password):
-        if self.validate_username(username) and self.validate_password(password):
+    def validate_email(self, email):
+        regex = r'^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+        if not re.search(regex, email):
+            return "Please enter a valid email address."
+        else:
+            return True
+
+    def register_user(self, username, password, email):
+        if self.validate_username(username) and self.validate_password(password) and self.validate_email(email):
             hashed_password = self.hash_password(password)
-            self.update_json(username, hashed_password)
+            self.update_json(username, hashed_password, email)
             console.log("[bold green]Registration successful!")
             return True
         else:
@@ -63,6 +75,8 @@ class Validate:
                 console.print(f"[bold red]Username error: {self.validate_username(username)}")
             if not self.validate_password(password):
                 console.print(f"[bold red]Password error: {self.validate_password(password)}")
+            if not self.validate_email(email):
+                console.print(f"[bold red]Email error: {self.validate_email(email)}")
             return False
 
     def login_user(self, username, password):
@@ -80,9 +94,23 @@ class Validate:
                 console.print(f"[bold red]Username '{username}' not found.")
         return False
 
+    def delete_account(self, username):
+        with open("data.json", "r+") as f:
+            fdata = json.load(f)
+            if username in fdata["gamedata"]:
+                del fdata["gamedata"][username]
+                f.seek(0)
+                json.dump(fdata, f, indent=3)
+                console.log("[bold green]Account deleted successfully!")
+                return True
+            else:
+                console.print(f"[bold red]Username '{username}' not found.")
+                return False
+
 
 # Object
 validateObj = Validate()
+
 
 # Login or Register
 def register():
@@ -90,11 +118,14 @@ def register():
     username = questionary.text("Enter your Username", validate=validateObj.validate_username).ask()
     # Password
     password = questionary.password("Enter your password", validate=validateObj.validate_password).ask()
+    # Email
+    email = questionary.text("Enter your Email", validate=validateObj.validate_email).ask()
 
     # Registration logic
-    if validateObj.register_user(username, password):
+    if validateObj.register_user(username, password, email):
         sleep(1)
         login()
+
 
 def login():
     # Username
@@ -108,16 +139,34 @@ def login():
         console.log("[bold green]Welcome back!")
         # Implement actions after successful login (e.g., game menu)
 
-# Choice to select login or register
+
+def delete_account():
+    # Username
+    username = questionary.text("Enter your Username").ask()
+    # Password
+    password = questionary.password("Enter your password").ask()
+
+    # Delete account logic
+    if validateObj.login_user(username, password):
+        if validateObj.delete_account(username):
+            console.log("[bold green]Account deleted successfully!")
+        else:
+            console.print("[bold red]Failed to delete account.")
+
+
+# Choice to select login or register or delete account
 choice = questionary.select(
-  "What do you want to do?",
-  choices=[
-      "LOGIN",
-      "REGISTER"
-  ]).ask()
+    "What do you want to do?",
+    choices=[
+        "LOGIN",
+        "REGISTER",
+        "DELETE ACCOUNT"
+    ]).ask()
 
 # Checking
 if choice == "REGISTER":
-  register()
-if choice == "LOGIN":
-  login()
+    register()
+elif choice == "LOGIN":
+    login()
+elif choice == "DELETE ACCOUNT":
+    delete_account()
