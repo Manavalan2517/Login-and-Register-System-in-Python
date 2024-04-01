@@ -107,7 +107,6 @@ class Validate:
                 console.print(f"[bold red]Username '{username}' not found.")
                 return False
 
-
 # Object
 validateObj = Validate()
 
